@@ -80,7 +80,9 @@ npm start
 ```
 
 Aparece un código QR en la terminal. En el celular del bot: **WhatsApp → Dispositivos vinculados → Vincular dispositivo** y escanéalo.
-La sesión se guarda en `.wwebjs_auth/`, así que solo se escanea la primera vez.
+La sesión se guarda en `~/.botiquin-bot` (en Windows: `C:\Users\<tu usuario>\.botiquin-bot`), así que solo se escanea la primera vez.
+
+El bot usa el Chrome o Edge que ya tengas instalado. Si `npm install` avisa que puppeteer no pudo descargar su Chrome, no pasa nada.
 
 > ⚠️ `whatsapp-web.js` no es la API oficial de WhatsApp. Para el prototipo usa un número de prueba.
 > La versión final debería migrar a la WhatsApp Business Cloud API de Meta.
@@ -93,8 +95,11 @@ La sesión se guarda en `.wwebjs_auth/`, así que solo se escanea la primera vez
 | `OLLAMA_URL` | `http://localhost:11434` | Dónde corre Ollama |
 | `OLLAMA_MODEL` | `llama3.2:3b` | Modelo. Con GPU se puede usar `llama3.1:8b` o `qwen2.5:7b` |
 | `OLLAMA_TIMEOUT_MS` | `30000` | Si la IA tarda más, el bot muestra el menú |
+| `CHROME_PATH` | se busca solo | Navegador para WhatsApp Web (Chrome o Edge) |
+| `SESION_PATH` | `~/.botiquin-bot` | Carpeta de la sesión de WhatsApp. Debe ser una ruta **corta** en Windows |
 
 Si Ollama no está corriendo, el bot **no se cae**: sigue funcionando con el menú.
+Al arrancar, el bot carga el modelo en memoria para que el primer mensaje no tarde; ya cargado, `llama3.2:3b` contesta en 1–3 s en una laptop con 16 GB de RAM y sin GPU.
 
 ## Correrlo en un servidor (Tec)
 

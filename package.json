@@ -16,5 +16,8 @@
     "whatsapp-web.js": "^1.26.0"
   },
   "license": "UNLICENSED",
-  "private": true
+  "private": true,
+  "allowScripts": {
+    "puppeteer@24.38.0": true
+  }
 }

@@ -2,6 +2,9 @@
 // escanéalo desde WhatsApp > Dispositivos vinculados con el número del bot.
 
 require('dotenv').config();
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 const qrcode = require('qrcode-terminal');
 const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const { responder } = require('./conversacion');
@@ -10,9 +13,31 @@ const ollama = require('./ollama');
 const PAUSA_ENTRE_MENSAJES_MS = 700;
 const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// Usa el Chrome/Edge ya instalado (CHROME_PATH en .env o se busca solo).
+// Si no encuentra ninguno, usa el Chrome que descarga puppeteer.
+function buscarNavegador() {
+  const candidatos = [
+    process.env.CHROME_PATH,
+    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+    process.env.LOCALAPPDATA && `${process.env.LOCALAPPDATA}\\Google\\Chrome\\Application\\chrome.exe`,
+    'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
+    'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+    '/usr/bin/google-chrome',
+    '/usr/bin/chromium',
+    '/usr/bin/chromium-browser',
+  ];
+  return candidatos.find((ruta) => ruta && fs.existsSync(ruta));
+}
+
+// La sesión de WhatsApp se guarda en una ruta corta: en Windows, si la ruta
+// del perfil del navegador es muy larga, WhatsApp Web se recarga y el bot truena.
+const CARPETA_SESION = process.env.SESION_PATH || path.join(os.homedir(), '.botiquin-bot');
+
 const client = new Client({
-  authStrategy: new LocalAuth({ dataPath: '.wwebjs_auth' }),
+  authStrategy: new LocalAuth({ dataPath: CARPETA_SESION }),
   puppeteer: {
+    executablePath: buscarNavegador(),
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   },
@@ -55,4 +80,8 @@ client.on('message', async (msg) => {
   }
 });
 
-client.initialize();
+ollama.precalentar();
+client.initialize().catch((err) => {
+  console.error('❌ No se pudo iniciar WhatsApp:', err.message || err);
+  process.exit(1);
+});
