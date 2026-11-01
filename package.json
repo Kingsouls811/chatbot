@@ -1,0 +1,20 @@
+{
+  "name": "botiquin-para-la-calma-bot",
+  "version": "0.1.0",
+  "description": "Chatbot de WhatsApp del Botiquín para la calma (LiFE Bienestar Estudiantil) con IA local en Ollama",
+  "main": "src/whatsapp.js",
+  "scripts": {
+    "start": "node src/whatsapp.js",
+    "consola": "node src/consola.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.26.0"
+  },
+  "license": "UNLICENSED",
+  "private": true
+}
