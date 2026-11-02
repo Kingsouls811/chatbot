@@ -96,22 +96,35 @@ client.on('ready', () => {
 client.on('auth_failure', (msg) => console.error('❌ Error de autenticación:', msg));
 client.on('disconnected', (razon) => console.warn('⚠️ WhatsApp desconectado:', razon));
 
+// Con el WhatsApp Web actual, whatsapp-web.js 1.34.7 sí envía el mensaje pero después
+// truena al buscarlo (el id ya no trae _serialized). Ese error se ignora para seguir
+// mandando el resto de la respuesta. sendSeen: false porque marcar como visto también falla.
+async function enviar(destino, contenido, opciones = {}) {
+  try {
+    await client.sendMessage(destino, contenido, { sendSeen: false, ...opciones });
+  } catch (err) {
+    if (!String(err.message).includes('must include an id property')) throw err;
+  }
+}
+
 client.on('message', async (msg) => {
   // Solo chats individuales: ignora grupos, estados y mensajes sin texto.
   if (msg.fromMe || msg.from.endsWith('@g.us') || msg.from === 'status@broadcast') return;
   if (msg.type !== 'chat') return;
 
-  try {
-    const chat = await msg.getChat();
-    await chat.sendStateTyping();
+  console.log(`📩 ${msg.from}: ${msg.body}`);
 
+  // "Escribiendo..." es opcional: con algunas versiones de WhatsApp Web getChat() falla
+  // y no debe impedir que el bot conteste.
+  msg.getChat().then((chat) => chat.sendStateTyping()).catch(() => {});
+
+  try {
     const respuestas = await responder(msg.from, msg.body);
     for (const r of respuestas) {
       if (r.tipo === 'imagen') {
-        const media = MessageMedia.fromFilePath(r.archivo);
-        await client.sendMessage(msg.from, media, { caption: r.texto });
+        await enviar(msg.from, MessageMedia.fromFilePath(r.archivo), { caption: r.texto });
       } else {
-        await client.sendMessage(msg.from, r.texto);
+        await enviar(msg.from, r.texto);
       }
       await esperar(PAUSA_ENTRE_MENSAJES_MS);
     }
