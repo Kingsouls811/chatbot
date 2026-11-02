@@ -67,6 +67,13 @@ ollama pull llama3.2:3b
 cp .env.example .env   # en Windows: copy .env.example .env
 ```
 
+### Notas para Windows
+
+- Instala con `$env:PUPPETEER_SKIP_DOWNLOAD="true"; npm.cmd install`. El bot usa el Edge o Chrome del sistema, así que no hace falta que puppeteer descargue su propio Chrome (esa descarga suele fallar).
+- En PowerShell usa `npm.cmd` en vez de `npm` si aparece el error de "ejecución de scripts deshabilitada".
+- No corras el bot en dos computadoras a la vez con el mismo número: cada mensaje se contestaría dos veces.
+- Con menos de 8 GB de RAM la IA va lenta: pon `OLLAMA_ACTIVO=false` en `.env` y el bot funciona solo con menú y palabras clave.
+
 ### Probar sin WhatsApp (consola)
 
 ```bash
