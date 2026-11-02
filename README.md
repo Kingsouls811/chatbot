@@ -80,6 +80,8 @@ npm start
 ```
 
 Aparece un código QR en la terminal. En el celular del bot: **WhatsApp → Dispositivos vinculados → Vincular dispositivo** y escanéalo.
+Si el QR de la terminal sale deformado, el bot también lo abre en el navegador (`qr.html`, se actualiza sola).
+Otra opción sin QR: pon `NUMERO_BOT` en `.env` y el bot muestra un código de 8 letras para **"Vincular con el número de teléfono"**.
 La sesión se guarda en `~/.botiquin-bot` (en Windows: `C:\Users\<tu usuario>\.botiquin-bot`), así que solo se escanea la primera vez.
 
 El bot usa el Chrome o Edge que ya tengas instalado. Si `npm install` avisa que puppeteer no pudo descargar su Chrome, no pasa nada.
@@ -96,6 +98,7 @@ El bot usa el Chrome o Edge que ya tengas instalado. Si `npm install` avisa que 
 | `OLLAMA_MODEL` | `llama3.2:3b` | Modelo. Con GPU se puede usar `llama3.1:8b` o `qwen2.5:7b` |
 | `OLLAMA_TIMEOUT_MS` | `30000` | Si la IA tarda más, el bot muestra el menú |
 | `CHROME_PATH` | se busca solo | Navegador para WhatsApp Web (Chrome o Edge) |
+| `NUMERO_BOT` | vacío | Número del bot (521 + 10 dígitos) para vincular con código en vez de QR |
 | `SESION_PATH` | `~/.botiquin-bot` | Carpeta de la sesión de WhatsApp. Debe ser una ruta **corta** en Windows |
 
 Si Ollama no está corriendo, el bot **no se cae**: sigue funcionando con el menú.

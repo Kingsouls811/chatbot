@@ -5,7 +5,9 @@ require('dotenv').config();
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { exec } = require('child_process');
 const qrcode = require('qrcode-terminal');
+const QRCode = require('qrcode');
 const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const { responder } = require('./conversacion');
 const ollama = require('./ollama');
@@ -34,6 +36,31 @@ function buscarNavegador() {
 // del perfil del navegador es muy larga, WhatsApp Web se recarga y el bot truena.
 const CARPETA_SESION = process.env.SESION_PATH || path.join(os.homedir(), '.botiquin-bot');
 
+// Opcional: vincular con un código de 8 letras en vez del QR (NUMERO_BOT en .env).
+const NUMERO_BOT = (process.env.NUMERO_BOT || '').replace(/\D/g, '');
+
+// En muchas terminales el QR de texto sale deformado y el celular no lo lee,
+// así que también se guarda como página (qr.html) que se recarga sola.
+const ARCHIVO_QR = path.join(__dirname, '..', 'qr.html');
+let qrAbierto = false;
+
+function paginaQR(contenido) {
+  return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="3">
+<title>QR del bot</title></head>
+<body style="font-family:sans-serif;text-align:center;padding:24px">${contenido}</body></html>`;
+}
+
+async function guardarQR(qr) {
+  const imagen = await QRCode.toDataURL(qr, { width: 360, margin: 2 });
+  fs.writeFileSync(ARCHIVO_QR, paginaQR(`<h2>Escanea con WhatsApp</h2>
+<p>WhatsApp → Dispositivos vinculados → Vincular un dispositivo</p>
+<img src="${imagen}" alt="QR"><p>El código cambia cada ~20 s; esta página se actualiza sola.</p>`));
+  if (!qrAbierto && process.platform === 'win32') {
+    exec(`start "" "${ARCHIVO_QR}"`);
+    qrAbierto = true;
+  }
+}
+
 const client = new Client({
   authStrategy: new LocalAuth({ dataPath: CARPETA_SESION }),
   puppeteer: {
@@ -41,14 +68,27 @@ const client = new Client({
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   },
+  ...(NUMERO_BOT && { pairWithPhoneNumber: { phoneNumber: NUMERO_BOT, showNotification: true } }),
 });
 
 client.on('qr', (qr) => {
+  if (NUMERO_BOT) return;
   console.log('Escanea este código QR con WhatsApp (Dispositivos vinculados):');
   qrcode.generate(qr, { small: true });
+  console.log(`Si no se lee, abre ${ARCHIVO_QR}`);
+  guardarQR(qr).catch((err) => console.warn('[qr] no se pudo guardar:', err.message));
+});
+
+client.on('code', (codigo) => {
+  console.log(`🔑 Código para vincular: ${codigo}`);
+  console.log('En el celular del bot: WhatsApp → Dispositivos vinculados → Vincular un dispositivo →');
+  console.log('"Vincular con el número de teléfono" y escribe el código.');
 });
 
 client.on('ready', () => {
+  if (fs.existsSync(ARCHIVO_QR)) {
+    fs.writeFileSync(ARCHIVO_QR, paginaQR('<h2>✅ Bot conectado a WhatsApp</h2><p>Ya puedes cerrar esta página.</p>'));
+  }
   console.log('✅ Bot del Botiquín para la calma conectado a WhatsApp.');
   console.log(ollama.OLLAMA_ACTIVO ? `🤖 IA local: Ollama (${ollama.OLLAMA_MODEL})` : '🤖 IA local desactivada (solo menú)');
 });
